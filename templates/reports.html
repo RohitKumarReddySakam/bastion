@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASTION — Reports</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">BASTION</div>
+    <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/reports" class="active">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">Audit Reports</h1>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Completed Audits <span class="count">({{ audits | length }})</span></h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>HTTPS</th>
+                        <th>Grade</th>
+                        <th>Score</th>
+                        <th>Findings</th>
+                        <th>OWASP</th>
+                        <th>Completed</th>
+                        <th>Downloads</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr>
+                        <td><a href="/audit/{{ audit.id }}" style="color:var(--accent)">{{ audit.target_url }}</a></td>
+                        <td>{{ '✓' if audit.https else '✗' }}</td>
+                        <td><span class="grade-{{ audit.overall_grade }}">{{ audit.overall_grade or '—' }}</span></td>
+                        <td>{{ audit.overall_score or 0 }}/100</td>
+                        <td>{{ audit.finding_count }}</td>
+                        <td>{{ audit.owasp_categories or 0 }} categories</td>
+                        <td>{{ audit.completed_at.strftime('%Y-%m-%d %H:%M') if audit.completed_at else '—' }}</td>
+                        <td>
+                            <a href="/api/report/{{ audit.id }}/json" class="btn btn-sm">JSON</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="empty">No completed audits</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

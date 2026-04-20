@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASTION — Audit Results</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">BASTION</div>
+    <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/reports">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">Audit Results</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" style="font-size:1.1em">{{ audit.target_url }}</div>
+            <div class="stat-label">Target</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value {% if audit.overall_grade %}grade-{{ audit.overall_grade }}{% endif %}">
+                {{ audit.overall_grade or '—' }}
+            </div>
+            <div class="stat-label">Security Grade</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ audit.overall_score or 0 }}/100</div>
+            <div class="stat-label">Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ '✓ HTTPS' if audit.https else '✗ HTTP' }}</div>
+            <div class="stat-label">Transport</div>
+        </div>
+        <div class="stat-card alert">
+            <div class="stat-value">{{ audit.critical_count }}</div>
+            <div class="stat-label">Critical Issues</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ audit.owasp_categories or 0 }}</div>
+            <div class="stat-label">OWASP Categories</div>
+        </div>
+    </div>
+
+    {% if audit.status == 'completed' %}
+    <div style="margin-bottom:16px;">
+        <a href="/api/report/{{ audit.id }}/json" class="btn btn-sm">Download JSON Report</a>
+    </div>
+    {% endif %}
+
+    <section class="panel">
+        <div class="panel-header"><h2>OWASP Top 10 Coverage</h2></div>
+        <div class="owasp-grid">
+            {% for cat in owasp_data.categories %}
+            <div class="owasp-card">
+                <div class="owasp-id">{{ cat.id }}</div>
+                <div class="owasp-name">{{ cat.name }}</div>
+                <div>
+                    <span class="badge sev-{{ cat.max_severity | lower }}">{{ cat.max_severity }}</span>
+                    <span class="owasp-count">{{ cat.findings | length }} finding(s)</span>
+                </div>
+            </div>
+            {% else %}
+            <p style="color:var(--muted);padding:16px">No OWASP categories flagged</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>All Findings <span class="count">({{ findings | length }})</span></h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Module</th>
+                        <th>Category</th>
+                        <th>Issue</th>
+                        <th>OWASP</th>
+                        <th>Remediation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in findings %}
+                    <tr>
+                        <td><span class="badge sev-{{ f.severity | lower }}">{{ f.severity }}</span></td>
+                        <td><span class="module-badge">{{ f.module }}</span></td>
+                        <td>{{ f.category }}</td>
+                        <td>{{ f.issue }}</td>
+                        <td>{{ f.owasp or '—' }}</td>
+                        <td class="fix-text">{{ f.fix }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="empty">No findings</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASTION — Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">BASTION</div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/reports">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">BASTION</h1>
+
+    <div class="audit-form">
+        <h2>New Audit</h2>
+        <form onsubmit="startAudit(event)" class="form-row">
+            <input id="audit-url" class="form-input" type="text"
+                   placeholder="https://example.com" autocomplete="off" required>
+            <button id="audit-btn" class="btn btn-primary" type="submit">Audit</button>
+        </form>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_audits }}</div>
+            <div class="stat-label">Total Audits</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ completed }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card alert">
+            <div class="stat-value">{{ critical_findings }}</div>
+            <div class="stat-label">Critical Findings</div>
+        </div>
+    </div>
+
+    <section class="panel">
+        <div class="panel-header"><h2>Recent Audits</h2></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>HTTPS</th>
+                        <th>Grade</th>
+                        <th>Score</th>
+                        <th>Findings</th>
+                        <th>Critical</th>
+                        <th>OWASP</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr>
+                        <td>{{ audit.target_url }}</td>
+                        <td>{{ '✓' if audit.https else '✗' }}</td>
+                        <td>
+                            {% if audit.overall_grade %}
+                            <span class="grade-{{ audit.overall_grade }}">{{ audit.overall_grade }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ audit.overall_score if audit.overall_score is not none else '—' }}/100</td>
+                        <td>{{ audit.finding_count }}</td>
+                        <td>
+                            {% if audit.critical_count > 0 %}
+                            <span class="badge sev-critical">{{ audit.critical_count }}</span>
+                            {% else %}0{% endif %}
+                        </td>
+                        <td>{{ audit.owasp_categories or 0 }} categories</td>
+                        <td><span class="status-{{ audit.status }}">{{ audit.status }}</span></td>
+                        <td>{{ audit.created_at.strftime('%Y-%m-%d %H:%M') if audit.created_at else '—' }}</td>
+                        <td>
+                            {% if audit.status == 'completed' %}
+                            <a href="/audit/{{ audit.id }}" class="btn btn-sm">View</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="10" class="empty">No audits yet — enter a URL above to start</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
